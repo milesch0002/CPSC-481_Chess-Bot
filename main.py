@@ -229,7 +229,6 @@ def openings(index, opening):
       else:
           return chess.Move.from_uci("f1c4")
 
-
 chosen_opening = random.randint(1,3)
 while True:
   if board.turn == chess.WHITE and board.fullmove_number <= 3:
@@ -237,7 +236,7 @@ while True:
     board.push(ai_move)
     print(board)
   elif board.turn == chess.WHITE and board.fullmove_number > 3:
-    ai_move = find_best_move(board.copy(), 3)  # Adjust search depth for better play, but slower
+    ai_move = find_best_move(board, 3)  # Adjust search depth for better play, but slower
     board.push(ai_move)
     print(board)
   else:
@@ -253,13 +252,13 @@ while True:
       print("Invalid input. Please enter your move in the format 'e2e4'.")
       continue
 
-  # Check for game end after player's move
-  if board.is_game_over():
-      result = board.result()
-      if result == '1-0':
-          print("AI won!")
-      elif result == '0-1':
-          print("You won!")
-      else:
-          print("Stalemate!")
-      break
+    # Check for game end after player's move
+    if board.is_game_over():
+        result = board.result()
+        if result == '1-0':
+            print("AI won!")
+        elif result == '0-1':
+            print("You won!")
+        else:
+            print("Stalemate!")
+        break
