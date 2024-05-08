@@ -3,21 +3,99 @@ import random
 
 board = chess.Board()
 
+# Table and piece values are given from this website: https://www.chessprogramming.org/Simplified_Evaluation_Function
 piece_type_values = {
-    chess.PAWN: 10,
-    chess.KNIGHT: 30,
-    chess.BISHOP: 30,
-    chess.ROOK: 50,
-    chess.QUEEN: 90,
-    chess.KING: 999,  # King is valued higher
+    chess.PAWN: 100,
+    chess.KNIGHT: 320,
+    chess.BISHOP: 330,
+    chess.ROOK: 500,
+    chess.QUEEN: 900,
+    chess.KING: 20000,
 }
+
+pawn_table = [
+    0,  0,  0,  0,  0,  0,  0,  0,
+    50, 50, 50, 50, 50, 50, 50, 50,
+    10, 10, 20, 30, 30, 20, 10, 10,
+    5,  5, 10, 25, 25, 10,  5,  5,
+    0,  0,  0, 20, 20,  0,  0,  0,
+    5, -5,-10,  0,  0,-10, -5,  5,
+    5, 10, 10,-20,-20, 10, 10,  5,
+    0,  0,  0,  0,  0,  0,  0,  0
+]
+
+knight_table = [
+    -50,-40,-30,-30,-30,-30,-40,-50,
+    -40,-20,  0,  0,  0,  0,-20,-40,
+    -30,  0, 10, 15, 15, 10,  0,-30,
+    -30,  5, 15, 20, 20, 15,  5,-30,
+    -30,  0, 15, 20, 20, 15,  0,-30,
+    -30,  5, 10, 15, 15, 10,  5,-30,
+    -40,-20,  0,  5,  5,  0,-20,-40,
+    -50,-40,-30,-30,-30,-30,-40,-50,
+]
+
+bishop_table = [
+    -20,-10,-10,-10,-10,-10,-10,-20,
+    -10,  0,  0,  0,  0,  0,  0,-10,
+    -10,  0,  5, 10, 10,  5,  0,-10,
+    -10,  5,  5, 10, 10,  5,  5,-10,
+    -10,  0, 10, 10, 10, 10,  0,-10,
+    -10, 10, 10, 10, 10, 10, 10,-10,
+    -10,  5,  0,  0,  0,  0,  5,-10,
+    -20,-10,-10,-10,-10,-10,-10,-20,
+]
+
+rook_table = [
+    0,  0,  0,  0,  0,  0,  0,  0,
+    5, 10, 10, 10, 10, 10, 10,  5,
+    -5,  0,  0,  0,  0,  0,  0, -5,
+    -5,  0,  0,  0,  0,  0,  0, -5,
+    -5,  0,  0,  0,  0,  0,  0, -5,
+    -5,  0,  0,  0,  0,  0,  0, -5,
+    -5,  0,  0,  0,  0,  0,  0, -5,
+    0,  0,  0,  5,  5,  0,  0,  0
+]
+
+queen_table = [
+    -20, -10, -10, -5, -5, -10, -10, -20,
+    -10, 0, 0, 0, 0, 0, 0, -10,
+    -10, 0, 5, 5, 5, 5, 0, -10,
+    -5, 0, 5, 5, 5, 5, 0, -5,
+    0, 0, 5, 5, 5, 5, 0, -5,
+    -10, 5, 5, 5, 5, 5, 0, -10,
+    -10, 0, 5, 0, 0, 0, 0, -10,
+    -20, -10, -10, -5, -5, -10, -10, -20
+]
+
+king_table_middlegame = [
+    -30,-40,-40,-50,-50,-40,-40,-30,
+    -30,-40,-40,-50,-50,-40,-40,-30,
+    -30,-40,-40,-50,-50,-40,-40,-30,
+    -30,-40,-40,-50,-50,-40,-40,-30,
+    -20,-30,-30,-40,-40,-30,-30,-20,
+    -10,-20,-20,-20,-20,-20,-20,-10,
+    20, 20,  0,  0,  0,  0, 20, 20,
+    20, 30, 10,  0,  0, 10, 30, 20
+]
+
+king_table_endgame = [
+    -50,-40,-30,-20,-20,-30,-40,-50,
+    -30,-20,-10,  0,  0,-10,-20,-30,
+    -30,-10, 20, 30, 30, 20,-10,-30,
+    -30,-10, 30, 40, 40, 30,-10,-30,
+    -30,-10, 30, 40, 40, 30,-10,-30,
+    -30,-10, 20, 30, 30, 20,-10,-30,
+    -30,-30,  0,  0,  0,  0,-30,-30,
+    -50,-30,-30,-30,-30,-30,-30,-50
+]
 
 # Function to evaluate the board for the AI (higher score for better position)
 def evaluate(board):
   if board.is_checkmate():
-    return -1000 if board.turn == chess.WHITE else 1000
+    return -1000000 if board.turn == chess.WHITE else 1000000
   if board.is_stalemate():
-    return 0
+    return -100
 
   # Material difference (positive for white advantage)
   material = 0
@@ -29,8 +107,39 @@ def evaluate(board):
 
   # Piece position value (needs refinement)
   position_value = 0
-  for piece in board.piece_map().values():
-    position_value += piece_type_values.get(piece.piece_type, 0)
+  for square, piece in board.piece_map().items():
+        if piece.color == chess.WHITE:
+            if piece.piece_type == chess.PAWN:
+                position_value += pawn_table[square]
+            elif piece.piece_type == chess.KNIGHT:
+                position_value += knight_table[square]
+            elif piece.piece_type == chess.BISHOP:
+                position_value += bishop_table[square]
+            elif piece.piece_type == chess.ROOK:
+                position_value += rook_table[square]
+            elif piece.piece_type == chess.QUEEN:
+                position_value += queen_table[square]
+            elif piece.piece_type == chess.KING:
+                if board.fullmove_number <= 30:
+                  position_value += king_table_middlegame[square]
+                else:
+                   position_value += king_table_endgame[square]
+        else:
+            if piece.piece_type == chess.PAWN:
+                position_value -= pawn_table[chess.square_mirror(square)]
+            elif piece.piece_type == chess.KNIGHT:
+                position_value -= knight_table[chess.square_mirror(square)]
+            elif piece.piece_type == chess.BISHOP:
+                position_value -= bishop_table[chess.square_mirror(square)]
+            elif piece.piece_type == chess.ROOK:
+                position_value -= rook_table[chess.square_mirror(square)]
+            elif piece.piece_type == chess.QUEEN:
+                position_value -= queen_table[chess.square_mirror(square)]
+            elif piece.piece_type == chess.KING:
+                if board.fullmove_number <= 30:
+                  position_value -= king_table_middlegame[chess.square_mirror(square)]
+                else:
+                   position_value -= king_table_endgame[chess.square_mirror(square)]
 
   return material + position_value
 
@@ -83,7 +192,6 @@ def find_best_move(board, depth):
 def openings(index, opening):
     # Queen's Gambit
     if opening == 1:
-        print("Queen's Gambit Openings")
         if index == 1:
             return chess.Move.from_uci("d2d4")
         elif index == 2:
@@ -99,7 +207,6 @@ def openings(index, opening):
                 return chess.Move.from_uci("c2c4")
     # Vienna Game
     elif opening == 2:
-        print("Vienna Game Opening")
         if index == 1:
             return chess.Move.from_uci("e2e4")
         elif index == 2:
@@ -115,14 +222,12 @@ def openings(index, opening):
                 return chess.Move.from_uci("b1c3")
     # Italian Game
     else:
-      print("Italian Game Opening")
       if index == 1:
           return chess.Move.from_uci("e2e4")
       elif index == 2:
           return chess.Move.from_uci("g1f3")
       else:
           return chess.Move.from_uci("f1c4")
-
 
 
 chosen_opening = random.randint(1,3)
@@ -138,7 +243,7 @@ while True:
   else:
     try:
       human_move = input("Enter your move as black (e.g. e2e4): ")
-      move = chess.Move.from_uci(human_move)
+      move = board.parse_san(human_move)
       if move in board.legal_moves:
         board.push(move)
       else:
@@ -152,9 +257,9 @@ while True:
   if board.is_game_over():
       result = board.result()
       if result == '1-0':
-          print("You won!")
-      elif result == '0-1':
           print("AI won!")
+      elif result == '0-1':
+          print("You won!")
       else:
           print("Stalemate!")
       break
