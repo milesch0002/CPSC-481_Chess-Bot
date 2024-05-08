@@ -193,72 +193,96 @@ def openings(index, opening):
     # Queen's Gambit
     if opening == 1:
         if index == 1:
-            return chess.Move.from_uci("d2d4")
+            return board.parse_san("d4")
         elif index == 2:
             if board.piece_at(chess.D5) is None:
-                return chess.Move.from_uci("d4d5")
+                return board.parse_san("d5")
             else:
-                return chess.Move.from_uci("c2c4")
+                return board.parse_san("c4")
         else:
             piece = board.piece_at(chess.D5)
             if piece is not None and piece.color == chess.BLACK and board.piece_at(chess.C4) is not None:
-                return chess.Move.from_uci("c4d5")
+                return board.parse_san("cxd5")
             else:
-                return chess.Move.from_uci("c2c4")
+                return board.parse_san("c4")
     # Vienna Game
     elif opening == 2:
         if index == 1:
-            return chess.Move.from_uci("e2e4")
+            return board.parse_san("e4")
         elif index == 2:
             if board.piece_at(chess.E5) is None:
-                return chess.Move.from_uci("e4e5")
+                return board.parse_san("e5")
             else:
-                return chess.Move.from_uci("b1c3")
+                return board.parse_san("Nc3")
         else:
             piece = board.piece_at(chess.C3)
             if piece is not None and piece.color == chess.WHITE:
-                return chess.Move.from_uci("f1c4")
+                return board.parse_san("Bc4")
             else:
-                return chess.Move.from_uci("b1c3")
+                return board.parse_san("Nc3")
     # Italian Game
     else:
-      if index == 1:
-          return chess.Move.from_uci("e2e4")
-      elif index == 2:
-          return chess.Move.from_uci("g1f3")
-      else:
-          return chess.Move.from_uci("f1c4")
+        if index == 1:
+            return board.parse_san("e4")
+        elif index == 2:
+            return board.parse_san("Nf3")
+        else:
+            return board.parse_san("Bc4")
+
+
 
 chosen_opening = random.randint(1,3)
 while True:
+  print("\n")
+  print("="*20)
+  turn = ""
+  if board.turn == True:
+     turn = "White"
+  else:
+     turn = "Black"
+  print("Current Move: ", board.fullmove_number,)
+  print("Turn: ", turn)
+  print("="*20)
   if board.turn == chess.WHITE and board.fullmove_number <= 3:
     ai_move = openings(board.fullmove_number, chosen_opening)
+    san_move = board.san(ai_move)
     board.push(ai_move)
+    print("-"*20)
     print(board)
+    print("AI Move:", san_move)
+    print("-"*20)
   elif board.turn == chess.WHITE and board.fullmove_number > 3:
-    ai_move = find_best_move(board, 3)  # Adjust search depth for better play, but slower
+    ai_move = find_best_move(board, 3)
+    san_move = board.san(ai_move)
     board.push(ai_move)
+    print("-"*20)
     print(board)
+    print("AI Move:", san_move)
+    print("-"*20)
   else:
     try:
-      human_move = input("Enter your move as black (e.g. e2e4): ")
+      human_move = input("Enter your move as black (e.g. a5): ")
       move = board.parse_san(human_move)
       if move in board.legal_moves:
         board.push(move)
+        print("-"*20)
+        print(board)
+        print("Human Move:", human_move)
+        print("-"*20)
       else:
         print("Invalid move. Please enter a valid move.")
         continue
     except ValueError:
-      print("Invalid input. Please enter your move in the format 'e2e4'.")
+      print("Invalid input. Please enter your move in the format 'a4'.")
       continue
-
-    # Check for game end after player's move
-    if board.is_game_over():
-        result = board.result()
-        if result == '1-0':
-            print("AI won!")
-        elif result == '0-1':
-            print("You won!")
-        else:
-            print("Stalemate!")
+  
+  # Check for game end after player's move
+  if board.is_game_over():
+    result = board.result()
+    if result == '1-0':
+        print("AI won!")
+    elif result == '0-1':
+        print("You won!")
+    else:
+        print("Stalemate!")
         break
